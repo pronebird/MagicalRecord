@@ -75,8 +75,13 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
 - (void)MR_setObject:(NSManagedObject *)relatedObject forRelationship:(NSRelationshipDescription *)relationshipInfo
 {
     NSAssert2(relatedObject != nil, @"Cannot add nil to %@ for attribute %@", NSStringFromClass([self class]), [relationshipInfo name]);
-    NSAssert2([relatedObject entity] == [relationshipInfo destinationEntity], @"related object entity %@ not same as destination entity %@", [relatedObject entity], [relationshipInfo destinationEntity]);
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-variable"
+    NSEntityDescription *destinationEntity = [relationshipInfo destinationEntity] ?: [[NSEntityDescription alloc] init];
+#pragma clang diagnostic pop
+    NSAssert1([[destinationEntity name] length], @"entity on relationship %@ is not valid", [relationshipInfo name]);
+    NSAssert2([[relatedObject entity] isKindOfEntity:destinationEntity], @"related object entity %@ not similar to destination entity %@", [relatedObject entity], [relationshipInfo destinationEntity]);
+    
     //add related object to set
     NSString *addRelationMessageFormat = @"set%@:";
     id relationshipSource = self;
@@ -91,7 +96,10 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
             NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:selector]];
             [invocation setSelector:selector];
             [invocation invokeWithTarget:self];
-            [invocation getReturnValue:&relationshipSource];
+            
+            __unsafe_unretained id orderedSet;
+            [invocation getReturnValue:&orderedSet];
+            relationshipSource = orderedSet;
 
             addRelationMessageFormat = @"addObject:";
         }
@@ -106,7 +114,7 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
 
     @try
     {
-        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[self methodSignatureForSelector:selector]];
+        NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:[relationshipSource methodSignatureForSelector:selector]];
         [invocation setSelector:selector];
         [invocation setArgument:&relatedObject atIndex:2];
         [invocation invokeWithTarget:relationshipSource];
@@ -141,7 +149,7 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
         }
 
         //        id value = [attributeInfo MR_valueForKeyPath:lookupKeyPath fromObjectData:objectData];
-        if (![self MR_importValue:value forKey:attributeName])
+        if (value && ![self MR_importValue:value forKey:attributeName])
         {
             [self setValue:value forKey:attributeName];
         }
@@ -284,10 +292,15 @@ NSString *const kMagicalRecordImportAttributeUseDefaultValueWhenNotPresent = @"u
     {
         NSManagedObjectContext *context = [self managedObjectContext];
         Class managedObjectClass = NSClassFromString([destinationEntity managedObjectClassName]);
-        NSString *primaryKey = [[destinationEntity MR_primaryAttribute] name];
-        if ([primaryKey length])
+				NSString *relatedByAtribute = [relationshipInfo.userInfo objectForKey:kMagicalRecordImportRelationshipLinkedByKey];
+
+				if (relatedByAtribute == nil || [relatedByAtribute length] == 0) {
+            relatedByAtribute = [[destinationEntity MR_primaryAttribute] name];
+        }       
+				
+        if ([relatedByAtribute length])
         {
-            objectForRelationship = [managedObjectClass MR_findFirstByAttribute:primaryKey
+            objectForRelationship = [managedObjectClass MR_findFirstByAttribute:relatedByAtribute
                                                                       withValue:relatedValue
                                                                       inContext:context];
         }
