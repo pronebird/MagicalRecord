@@ -3,6 +3,7 @@
 
 #import "MagicalRecordStack.h"
 
+#import "MagicalRecordStack+Private.h"
 #import "NSManagedObjectContext+MagicalRecord.h"
 #import "NSPersistentStore+MagicalRecord.h"
 #import "NSManagedObjectModel+MagicalRecord.h"

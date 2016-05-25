@@ -5,6 +5,11 @@
 
 @interface MagicalRecordStack ()
 
+@property (readwrite, nonnull, nonatomic, strong) NSManagedObjectContext *context;
+@property (readwrite, nonnull, nonatomic, strong) NSManagedObjectModel *model;
+@property (readwrite, nonnull, nonatomic, strong) NSPersistentStoreCoordinator *coordinator;
+@property (readwrite, nullable, nonatomic, strong) NSPersistentStore *store;
+
 - (nonnull NSPersistentStoreCoordinator *)createCoordinator;
 - (nonnull NSPersistentStoreCoordinator *)createCoordinatorWithOptions:(nullable NSDictionary *)options;
 
