@@ -20,6 +20,8 @@ static MagicalRecordStack *defaultStack;
 
 @implementation MagicalRecordStack
 
+@synthesize stackName = _stackName;
+
 - (void)dealloc
 {
     [self reset];
@@ -49,11 +51,6 @@ static MagicalRecordStack *defaultStack;
     defaultStack = stack;
     [stack loadStack];
     MRLogVerbose(@"Default Core Data Stack Initialized: %@", stack);
-}
-
-+ (instancetype)stack
-{
-    return [[self alloc] init];
 }
 
 - (void)loadStack

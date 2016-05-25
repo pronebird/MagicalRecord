@@ -21,8 +21,6 @@
 + (nonnull instancetype)defaultStack;
 + (void)setDefaultStack:(nullable MagicalRecordStack *)stack;
 
-+ (nonnull instancetype)stack;
-
 - (void)reset;
 
 - (nonnull NSManagedObjectContext *)newPrivateQueueContext;
